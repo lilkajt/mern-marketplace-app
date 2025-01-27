@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
 import { errorHandler } from "../utils/error.js";
+import jwt from "jsonwebtoken";
 
 export const signup = async (req, res, next) => {
     const {username, email, password } = req.body;
@@ -33,6 +34,33 @@ export const signup = async (req, res, next) => {
         const newUser = new User({ username, email, password: hashedPassword });
         await newUser.save();
         res.status(201).json({ message: "User created successfully!" });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const signin = async (req, res, next) => {
+    const {email, password } = req.body;
+    const trimmedEmail = email == undefined? '' : email.trim();
+    const trimmedPassword = password == undefined? '' : password.trim();
+    if (trimmedEmail === '' || trimmedPassword === '') {
+        return next(errorHandler(400, "Email and password are required!"));
+    }
+    const user = await User.findOne({email: trimmedEmail});
+    if (!user){
+        return next(errorHandler(404, "User not found!"));
+    }
+    try {
+        const isMatch = bcrypt.compareSync(password, user.password);
+        if (!isMatch) {
+            return next(errorHandler(401, "Incorrect email or password!"));
+        }
+        const {password: pass, ...rest} = user._doc;
+        const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: "1h"});
+        res
+        .status(201)
+        .cookie('access_token', token, {httpOnly: true, expires: new Date(Date.now() + 3600000)})
+        .json(rest);
     } catch (error) {
         next(error);
     }
