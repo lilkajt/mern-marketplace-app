@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
+import { errorHandler } from "../utils/error.js";
 
 export const signup = async (req, res, next) => {
     const {username, email, password } = req.body;
@@ -8,24 +9,16 @@ export const signup = async (req, res, next) => {
     const trimmedPassword = password == undefined? '' : password.trim();
     const passRegex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/;
     if (trimmedUsername === '' || trimmedEmail === '' || trimmedPassword === '') {
-        const error = new Error("Username, email and password are required!");
-        error.statusCode = 400;
-        return next(error);
+        return next(errorHandler(400, "Username, email and password are required!"));
     }
     if (trimmedPassword.length < 8) {
-        const error = new Error("Password must be at least 8 characters!");
-        error.statusCode = 400;
-        return next(error);
+        return next(errorHandler(400, "Password must be at least 8 characters!"));
     }
     if (passRegex.test(trimmedPassword) === false) {
-        const error = new Error("Password must contain at least one uppercase letter, one lowercase letter, one number and one special character!");
-        error.statusCode = 400;
-        return next(error);
+        return next(errorHandler(400, "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character!"));
     }
     if ( trimmedUsername.length < 4){
-        const error = new Error("Username must be at least 4 characters!");
-        error.statusCode = 400;
-        return next(error);
+        return next(errorHandler(400, "Username must be at least 4 characters!"));
     }
     if (await User.findOne({
         $or: [
@@ -33,9 +26,7 @@ export const signup = async (req, res, next) => {
             {email: trimmedEmail}
         ]
     }) != null) {
-        const error = new Error("Username or email is taken!");
-        error.statusCode = 400;
-        return next(error);
+        return next(errorHandler(400, "Username or email is taken!"));
     }
     try {
         const hashedPassword = bcrypt.hashSync(password, 12);
