@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux';
 import { signInStart, signInSuccess, signInFailure } from '../redux/user/userSlice.js';
@@ -9,13 +9,13 @@ export default function SignIn() {
   const { loading, error } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const handleChange = (e) =>{
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>{
     setFormData({
       ...formData,
       [e.target.id]: e.target.value
     });
   }
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     dispatch(signInStart());
     await axios.post('/api/auth/signin',formData)

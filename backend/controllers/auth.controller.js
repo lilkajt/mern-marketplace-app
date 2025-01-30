@@ -55,7 +55,7 @@ export const signin = async (req, res, next) => {
         if (!isMatch) {
             return next(errorHandler(401, "Incorrect email or password!"));
         }
-        const {password: pass, ...rest} = user._doc;
+        const {password: p, __v: v, createdAt: c, updatedAt: u, ...rest} = user._doc;
         const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: "1h"});
         res
         .status(201)
