@@ -5,10 +5,12 @@ import jwt from "jsonwebtoken";
 
 export const signup = async (req, res, next) => {
     const {username, email, password } = req.body;
+    // fix regex to trim whitespaces, dont user trim
     const trimmedUsername = username == undefined? '' : username.trim();
     const trimmedEmail = email == undefined? '' : email.trim();
     const trimmedPassword = password == undefined? '' : password.trim();
     const passRegex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/;
+    // fix when login with google, error passing empty form
     if (trimmedUsername === '' || trimmedEmail === '' || trimmedPassword === '') {
         return next(errorHandler(400, "Username, email and password are required!"));
     }
@@ -65,3 +67,36 @@ export const signin = async (req, res, next) => {
         next(error);
     }
 }
+
+export const google = async (req, res, next) => {
+    const {name, email, photo} = req.body;
+    try {
+        const user = await User.findOne( {email: email} );
+        if (user){
+            const {password: p, __v: v, createdAt: c, updatedAt: u, ...rest} = user._doc;
+            const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: "1h"});
+            res
+            .status(201)
+            .cookie('access_token', token, {httpOnly: true, expires: new Date(Date.now() + 3600000)})
+            .json(rest);
+        } else{
+            const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+            const hashedPassword = bcrypt.hashSync(generatedPassword, 12);
+            const newUser = new User({
+                username: name.replace(/\s+/g, '').toLowerCase() + Math.random().toString(36).slice(-8),
+                email: email,
+                password: hashedPassword,
+                avatar: photo
+            });
+            await newUser.save();
+            const {password: p, __v: v, createdAt: c, updatedAt: u, ...rest} = newUser._doc;
+            const token = jwt.sign({id: newUser._id}, process.env.JWT_SECRET, {expiresIn: "1h"});
+            res
+            .status(201)
+            .cookie('access_token', token, {httpOnly: true, expires: new Date(Date.now() + 3600000)})
+            .json(rest);
+        }
+    } catch (error) {
+        next(error);
+    }
+};
