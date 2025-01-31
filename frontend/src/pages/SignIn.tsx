@@ -7,6 +7,7 @@ import OAuth from '../components/OAuth.js';
 
 export default function SignIn() {
   const [formData, setFormData] = useState({});
+  const [isOAuth, setIsOAuth] = useState(false);
   const { loading, error } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -18,6 +19,7 @@ export default function SignIn() {
   }
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isOAuth) return;
     dispatch(signInStart());
     await axios.post('/api/auth/signin',formData)
     .then( function (response) {
@@ -35,7 +37,7 @@ export default function SignIn() {
         <input type="email" name="email" id="email" placeholder='email' className='border p-3 rounded-lg' onChange={handleChange}/>
         <input type="password" name="password" id="password" placeholder='password' className='border p-3 rounded-lg' onChange={handleChange}/>
         <button disabled={loading} type="submit" className='bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80'>{loading ? 'Loading...' : 'Sign in'}</button>
-        <OAuth />
+        <OAuth setIsOAuth={setIsOAuth}/>
       </form>
       <div className="flex gap-2 mt-5">
         <p>Don't have an account?</p>
