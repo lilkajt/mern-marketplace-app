@@ -57,10 +57,10 @@ export const signin = async (req, res, next) => {
         if (!isMatch) {
             return next(errorHandler(401, "Incorrect email or password!"));
         }
-        const {password: p, __v: v, createdAt: c, updatedAt: u, ...rest} = user._doc;
+        const {password: p, ...rest} = user._doc;
         const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: "1h"});
         res
-        .status(201)
+        .status(200)
         .cookie('access_token', token, {httpOnly: true, expires: new Date(Date.now() + 3600000)})
         .json(rest);
     } catch (error) {
@@ -73,7 +73,7 @@ export const google = async (req, res, next) => {
     try {
         const user = await User.findOne( {email: email} );
         if (user){
-            const {password: p, __v: v, createdAt: c, updatedAt: u, ...rest} = user._doc;
+            const {password: p, ...rest} = user._doc;
             const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: "1h"});
             res
             .status(201)
@@ -89,7 +89,7 @@ export const google = async (req, res, next) => {
                 avatar: photo
             });
             await newUser.save();
-            const {password: p, __v: v, createdAt: c, updatedAt: u, ...rest} = newUser._doc;
+            const {password: p, ...rest} = newUser._doc;
             const token = jwt.sign({id: newUser._id}, process.env.JWT_SECRET, {expiresIn: "1h"});
             res
             .status(201)
