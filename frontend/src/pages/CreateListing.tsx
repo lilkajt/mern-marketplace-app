@@ -1,7 +1,6 @@
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
 import { useState } from "react"
 import { app } from "../firebase";
-import { set } from "mongoose";
 
 export default function CreateListing() {
     const [files, setFiles] = useState<FileList | null>(null);
